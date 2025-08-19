@@ -1,7 +1,7 @@
 # 💳 E-Wallet Application
 
 This is a **Spring Boot based REST API** for an **e-wallet system**.  
-It provides functionality for **user management, wallet transactions, and payments**.
+It provides functionality for **user management, wallet transactions, payments, and secure authentication with JWT tokens**.
 
 ---
 
@@ -11,6 +11,7 @@ It provides functionality for **user management, wallet transactions, and paymen
 - 🔹 Adding funds to wallets  
 - 🔹 Making transactions between users  
 - 🔹 Viewing user transaction history  
+- 🔹 **JWT-based Authentication & Authorization**  
 
 ---
 
@@ -18,7 +19,7 @@ It provides functionality for **user management, wallet transactions, and paymen
 
 - Java 17+  
 - Spring Boot  
-- Spring Security (for authentication)  
+- Spring Security + **JWT (JSON Web Tokens)**  
 - Spring Data JPA / Hibernate  
 - PostgreSQL (or any SQL DB)  
 - Maven  
@@ -27,9 +28,10 @@ It provides functionality for **user management, wallet transactions, and paymen
 
 ## 📂 Project Structure (Controllers Overview)
 
-- **UserController** → Handles user CRUD operations  
-- **TransactionController** → Handles money transfers and transaction history  
-- **WalletController** → Handles wallet balance and fund addition  
+- **AuthController** → Handles user login & JWT token generation  
+- **UserController** → Handles user CRUD operations (secured with JWT)  
+- **TransactionController** → Handles money transfers and transaction history (secured with JWT)  
+- **WalletController** → Handles wallet balance and fund addition (secured with JWT)  
 
 ---
 
@@ -48,6 +50,10 @@ spring.datasource.username=your_db_username
 spring.datasource.password=your_db_password
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
+
+# JWT Secret & Expiration
+jwt.secret=your_base64_encoded_secret_key
+jwt.expiration=18000000
 ```
 
 ---
@@ -81,9 +87,46 @@ http://localhost:8080/swagger-ui.html
 
 ---
 
+## 🔑 Authentication & JWT
+
+### 1. Register a User
+```json
+POST /auth/register
+{
+  "name": "Alice",
+  "email": "alice@email.com",
+  "password": "securePass123"
+}
+```
+
+### 2. Login & Get Token
+```json
+POST /auth/login
+{
+  "email": "alice@email.com",
+  "password": "securePass123"
+}
+```
+
+Response:
+```json
+{
+  "token": "eyJhbGciOiJIUzUxMiJ9..."
+}
+```
+
+### 3. Use Token in Requests
+All secured endpoints require an **Authorization header**:
+
+```
+Authorization: Bearer <your_token_here>
+```
+
+---
+
 ## 📘 API Endpoints
 
-### 👤 User APIs
+### 👤 User APIs (JWT Protected)
 
 | Method | Endpoint       | Description        |
 |--------|---------------|--------------------|
@@ -92,58 +135,28 @@ http://localhost:8080/swagger-ui.html
 | PATCH  | /user/{id}    | Update user details |
 | DELETE | /user/{id}    | Delete user by ID  |
 
-📌 Example Request (Create User):
-
-```json
-POST /user/add
-{
-  "name": "Alice",
-  "email": "alice@email.com",
-  "password": "securePass123"
-}
-```
-
 ---
 
-### 💸 Transaction APIs
+### 💸 Transaction APIs (JWT Protected)
 
 | Method | Endpoint                  | Description                    |
 |--------|---------------------------|--------------------------------|
-| POST   | /transaction/send        | Send money (create transaction)|
-| GET    | /transaction/{id}        | Get transaction by ID          |
-| GET    | /transaction/getAll/{userId} | Get all transactions for a user |
-
-📌 Example Request (Send Money):
-
-```json
-POST /transaction/send
-{
-  "senderId": "1",
-  "receiverId": "2",
-  "amount": 500
-}
-```
+| POST   | /transaction/send        | Send money (create transaction)|  
+| GET    | /transaction/{id}        | Get transaction by ID          |  
+| GET    | /transaction/getAll/{userId} | Get all transactions for a user |  
 
 ---
 
-### 🏦 Wallet APIs
+### 🏦 Wallet APIs (JWT Protected)
 
-| Method | Endpoint             | Description                        |
-|--------|----------------------|------------------------------------|
-| POST   | /payment/add_money   | Add money to logged-in user's wallet |
-
-📌 Example Request (Add Money):
-
-```text
-POST /payment/add_money?amount=1000
-```
-(Requires authentication → Spring Security UserDetails.)
+| Method | Endpoint             | Description                          |
+|--------|----------------------|--------------------------------------|
+| POST   | /payment/add_money   | Add money to logged-in user’s wallet |
 
 ---
 
 ## ✅ Future Enhancements
 
-- 🔐 JWT Authentication for secure API access  
 - 📊 Wallet balance & transaction analytics endpoints  
 - 🌍 Support for multiple currencies  
 - 📱 Mobile app integration  
@@ -153,4 +166,4 @@ POST /payment/add_money?amount=1000
 ## 👨💻 Author
 
 **Varun Seemar**  
-Full Stack Engineer | Java & Spring Boot Developer | MERN Full Stack Developer 
+Full Stack Engineer | Java & Spring Boot Developer | MERN Full Stack Developer  
